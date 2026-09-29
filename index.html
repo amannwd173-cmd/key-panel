@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aim AI - Key Admin Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #fff; text-align: center; padding: 20px; }
+        .card { background: #1e1e1e; padding: 25px; border-radius: 12px; max-width: 400px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; font-size: 15px; box-sizing: border-box; }
+        input { background: #2c2c2c; color: #fff; }
+        button { background: #28a745; color: white; font-weight: bold; cursor: pointer; }
+        button:hover { background: #218838; }
+        .msg { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🔑 Aim AI Key Panel</h2>
+    
+    <input type="text" id="keyInput" placeholder="Enter New Key (e.g. VIP-1234)">
+    <select id="statusSelect">
+        <option value="active">Active</option>
+        <option value="disabled">Disabled</option>
+    </select>
+    
+    <button onclick="addKey()">Add Key To Database</button>
+    
+    <p id="statusMsg" class="msg"></p>
+</div>
+
+<!-- Firebase JS SDK (v8) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+    // Yahan apni Firebase Database ki details dalein
+    const firebaseConfig = {
+        apiKey: "APNA_API_KEY_YAHAN_DALEIN",
+        authDomain: "aim-ai-angel.firebaseapp.com",
+        databaseURL: "https://aim-ai-angel-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "aim-ai-angel"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    function addKey() {
+        const keyName = document.getElementById('keyInput').value.trim();
+        const keyStatus = document.getElementById('statusSelect').value;
+        const msg = document.getElementById('statusMsg');
+
+        if (!keyName) {
+            msg.style.color = "red";
+            msg.innerText = "Kripya Key Name Likhein!";
+            return;
+        }
+
+        database.ref('Keys/' + keyName).set({
+            status: keyStatus,
+            created_at: new Date().toISOString()
+        }, (error) => {
+            if (error) {
+                msg.style.color = "red";
+                msg.innerText = "Error: " + error.message;
+            } else {
+                msg.style.color = "#28a745";
+                msg.innerText = "✅ Key Successfully Add Ho Gayi!";
+                document.getElementById('keyInput').value = "";
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
