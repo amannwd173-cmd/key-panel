@@ -1,77 +1,25 @@
 <!DOCTYPE html>
-<html lang="hi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aim AI - Key Admin Panel</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #121212; color: #fff; text-align: center; padding: 20px; }
-        .card { background: #1e1e1e; padding: 25px; border-radius: 12px; max-width: 400px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; font-size: 15px; box-sizing: border-box; }
-        input { background: #2c2c2c; color: #fff; }
-        button { background: #28a745; color: white; font-weight: bold; cursor: pointer; }
-        button:hover { background: #218838; }
-        .msg { margin-top: 15px; font-weight: bold; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h2>🔑 Aim AI Key Panel</h2>
-    
-    <input type="text" id="keyInput" placeholder="Enter New Key (e.g. VIP-1234)">
-    <select id="statusSelect">
-        <option value="active">Active</option>
-        <option value="disabled">Disabled</option>
-    </select>
-    
-    <button onclick="addKey()">Add Key To Database</button>
-    
-    <p id="statusMsg" class="msg"></p>
-</div>
-
-<!-- Firebase JS SDK (v8) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
+<html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FANGAMEX Key Panel</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:18px;background:#10131c;color:#f4f5f8;font-family:Arial,sans-serif}.wrap{max-width:520px;margin:20px auto}.card{background:#1b2030;border:1px solid #30384d;border-radius:16px;padding:20px;margin:14px 0}h1{font-size:23px;color:#ff4f9a}h2{font-size:18px}p,.small{color:#aeb6c8;font-size:13px;line-height:1.5}input,select,button{width:100%;padding:13px;margin:7px 0;border-radius:9px;border:1px solid #39435a;background:#111725;color:#fff;font-size:15px}button{background:#ec3f8b;border:0;font-weight:bold}button.secondary{background:#34415c}button.danger{background:#a9364f}.row{display:flex;gap:8px}.row>*{flex:1}.hidden{display:none}.key{padding:12px;background:#111725;border:1px solid #343d52;border-radius:10px;margin:9px 0;overflow-wrap:anywhere}.key strong{color:#ff70ad}.pill{padding:3px 8px;border-radius:20px;background:#263c34;color:#83e2ad;font-size:11px}.off{background:#49303a;color:#ff9cb4}#msg{min-height:22px;color:#ffca70;font-size:13px}
+</style></head><body><div class="wrap"><div class="card">
+<h1>FANGAMEX KEY PANEL</h1><p>Admin login ke baad hi keys banayein aur manage karein.</p>
+<div id="loginBox"><input id="email" type="email" placeholder="Admin Email"><input id="password" type="password" placeholder="Admin Password"><button id="loginBtn">Admin Login</button></div>
+<div id="panel" class="hidden"><div class="row"><button class="secondary" id="refreshBtn">Refresh</button><button class="danger" id="logoutBtn">Logout</button></div>
+<h2>नई Key बनाएँ</h2><select id="duration"><option value="1">1 दिन</option><option value="7">7 दिन</option><option value="15">15 दिन</option><option value="30">30 दिन</option></select>
+<button id="generateBtn">Generate & Save Key</button><div id="newKey" class="hidden key"></div><button id="copyBtn" class="secondary hidden">Copy Key</button><h2>सभी Keys</h2><div id="keysList"><p>Keys लोड हो रही हैं...</p></div></div><div id="msg"></div></div>
+<p class="small">Admin password किसी के साथ साझा न करें।</p></div>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
-    // Yahan apni Firebase Database ki details dalein
-    const firebaseConfig = {
-        apiKey: "APNA_API_KEY_YAHAN_DALEIN",
-        authDomain: "aim-ai-angel.firebaseapp.com",
-        databaseURL: "https://aim-ai-angel-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "aim-ai-angel"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    function addKey() {
-        const keyName = document.getElementById('keyInput').value.trim();
-        const keyStatus = document.getElementById('statusSelect').value;
-        const msg = document.getElementById('statusMsg');
-
-        if (!keyName) {
-            msg.style.color = "red";
-            msg.innerText = "Kripya Key Name Likhein!";
-            return;
-        }
-
-        database.ref('Keys/' + keyName).set({
-            status: keyStatus,
-            created_at: new Date().toISOString()
-        }, (error) => {
-            if (error) {
-                msg.style.color = "red";
-                msg.innerText = "Error: " + error.message;
-            } else {
-                msg.style.color = "#28a745";
-                msg.innerText = "✅ Key Successfully Add Ho Gayi!";
-                document.getElementById('keyInput').value = "";
-            }
-        });
-    }
-</script>
-
-</body>
-</html>
+const firebaseConfig={apiKey:"AIzaSyC9c7lx17F3vTKuTLV9VokoeAmbMT6vaMc",authDomain:"aim-ai-angel.firebaseapp.com",databaseURL:"https://aim-ai-angel-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"aim-ai-angel",storageBucket:"aim-ai-angel.firebasestorage.app",messagingSenderId:"200877621483",appId:"1:200877621483:web:42d357d1810aef46e67eae",measurementId:"G-P9DFJ0WZ8Y"};
+firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),db=firebase.database();const ADMIN_UID="brnGMEwd4VZrp7HHwLyD3gq3QNA2";const $=id=>document.getElementById(id);let latestKey="";
+function msg(t,bad=false){$("msg").style.color=bad?"#ff8198":"#ffca70";$("msg").textContent=t}
+function makeKey(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",b=new Uint8Array(16);crypto.getRandomValues(b);let s="FGX-";for(let i=0;i<b.length;i++){s+=c[b[i]%c.length];if(i===3||i===7||i===11)s+="-"}return s}
+function showUser(u){if(!u)return;if(u.uid!==ADMIN_UID){auth.signOut();msg("यह अकाउंट Admin नहीं है।",true);return}$("loginBox").classList.add("hidden");$("panel").classList.remove("hidden");loadKeys()}
+$("loginBtn").onclick=async()=>{msg("Login हो रहा है...");try{let c=await auth.signInWithEmailAndPassword($("email").value.trim(),$("password").value);showUser(c.user)}catch(e){msg("Login Error: "+e.message,true)}};
+$("logoutBtn").onclick=()=>auth.signOut();auth.onAuthStateChanged(u=>{if(!u){$("loginBox").classList.remove("hidden");$("panel").classList.add("hidden")}else showUser(u)});
+$("generateBtn").onclick=async()=>{const u=auth.currentUser;if(!u||u.uid!==ADMIN_UID){msg("Admin login जरूरी है।",true);return}$("generateBtn").disabled=true;msg("Key बनाई जा रही है...");try{let key=makeKey(),days=Number($("duration").value);await db.ref("Keys/"+key).set({status:"active",durationDays:days,durationMs:days*86400000,createdAt:firebase.database.ServerValue.TIMESTAMP,activatedBy:null,activatedAt:null,expiresAt:null});latestKey=key;$("newKey").classList.remove("hidden");$("copyBtn").classList.remove("hidden");$("newKey").innerHTML="<strong>"+key+"</strong><br><span class='small'>"+days+" दिन | पहली activation पर समय शुरू होगा</span>";msg("Key बन गई।");loadKeys()}catch(e){msg("Save Error: "+e.message,true)}$("generateBtn").disabled=false};
+$("copyBtn").onclick=async()=>{try{await navigator.clipboard.writeText(latestKey);msg("Key Copy हो गई।")}catch(e){msg("Key को दबाकर Copy करें।")}};$("refreshBtn").onclick=loadKeys;
+async function loadKeys(){let box=$("keysList");box.innerHTML="<p>लोड हो रहा है...</p>";try{let snap=await db.ref("Keys").once("value"),data=snap.val()||{},entries=Object.entries(data).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));box.innerHTML="";if(!entries.length){box.innerHTML="<p>अभी कोई Key नहीं है।</p>";return}entries.forEach(([key,v])=>{let d=document.createElement("div");d.className="key";let active=v.status==="active";d.innerHTML="<strong>"+key+"</strong> <span class='pill "+(active?"":"off")+"'>"+(active?"Active":"Disabled")+"</span><br><span class='small'>"+(v.durationDays||0)+" दिन | "+(v.activatedBy?("Activated: "+new Date(v.activatedAt||0).toLocaleString()+"<br>Expiry: "+new Date(v.expiresAt||0).toLocaleString()):"अभी Activate नहीं हुई")+"</span>";let b=document.createElement("button");b.className=active?"danger":"secondary";b.textContent=active?"Disable Key":"Enable Key";b.onclick=()=>toggleKey(key,active);d.appendChild(b);box.appendChild(d)})}catch(e){box.innerHTML="<p>Database Error: "+e.message+"</p>"}}
+async function toggleKey(k,on){try{await db.ref("Keys/"+k+"/status").set(on?"disabled":"active");msg("Key status बदल गया।");loadKeys()}catch(e){msg("Update Error: "+e.message,true)}}
+</script></body></html>
