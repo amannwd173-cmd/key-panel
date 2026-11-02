@@ -23,7 +23,7 @@ button:disabled{opacity:.5}
 .secondary{background:#34445e}
 .danger{background:#c62828}
 .key{background:#101522;padding:12px;border-radius:8px;margin:10px 0;overflow-wrap:anywhere}
-.small{font-size:12px;color:#b8c3d6}
+.small{font-size:12px;color:#b8c3d6;line-height:1.8}
 .hidden{display:none}
 #message{padding:10px;color:#80ffb0;overflow-wrap:anywhere}
 </style>
@@ -50,13 +50,38 @@ button:disabled{opacity:.5}
 <input id="customKey" type="text" maxlength="32"
 placeholder="अपनी Key लिखें जैसे FANGAMEX123">
 
-<p class="small">खाली छोड़ने पर Automatic Key बनेगी। केवल A-Z, 0-9 और - लिखें।</p>
+<p class="small">
+खाली छोड़ने पर Automatic Key बनेगी। केवल A-Z, 0-9 और - लिखें।
+</p>
+
+<label for="duration">Key Duration चुनें</label>
 
 <select id="duration">
-<option value="1">1 दिन</option>
-<option value="7">7 दिन</option>
-<option value="15">15 दिन</option>
-<option value="30">30 दिन</option>
+<optgroup label="घंटे">
+<option value="3600000">1 घंटा</option>
+<option value="7200000">2 घंटे</option>
+<option value="10800000">3 घंटे</option>
+<option value="14400000">4 घंटे</option>
+<option value="18000000">5 घंटे</option>
+<option value="21600000">6 घंटे</option>
+<option value="25200000">7 घंटे</option>
+<option value="28800000">8 घंटे</option>
+<option value="32400000">9 घंटे</option>
+<option value="36000000">10 घंटे</option>
+<option value="39600000">11 घंटे</option>
+<option value="43200000">12 घंटे</option>
+</optgroup>
+
+<optgroup label="दिन">
+<option value="86400000">1 दिन</option>
+<option value="604800000">7 दिन</option>
+<option value="1296000000">15 दिन</option>
+<option value="2592000000">30 दिन</option>
+</optgroup>
+
+<optgroup label="विशेष">
+<option value="-1">Lifetime (हमेशा के लिए)</option>
+</optgroup>
 </select>
 
 <button id="generateBtn">GENERATE KEY</button>
@@ -80,7 +105,7 @@ placeholder="अपनी Key लिखें जैसे FANGAMEX123">
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyC9c7lx17F3vTKuTLV9VokoeAmbMT6vaMc",
+  apiKey: "AIzaSyC9c7lx17F3vTKuTL9VokoeAmbMT6vaMc",
   authDomain: "aim-ai-angel.firebaseapp.com",
   databaseURL: "https://aim-ai-angel-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "aim-ai-angel",
@@ -130,6 +155,24 @@ function makeKey(){
 function adminCheck(){
   return auth.currentUser &&
          auth.currentUser.uid === ADMIN_UID;
+}
+
+function durationName(ms){
+  if(Number(ms) === -1) return "Lifetime";
+
+  const hours = Number(ms) / 3600000;
+
+  if(Number.isInteger(hours) && hours < 24){
+    return hours + (hours === 1 ? " घंटा" : " घंटे");
+  }
+
+  const days = Number(ms) / 86400000;
+
+  if(Number.isInteger(days)){
+    return days + " दिन";
+  }
+
+  return "Custom अवधि";
 }
 
 // LOGIN
@@ -182,7 +225,8 @@ $("generateBtn").onclick = async()=>{
   }
 
   const key = typed || makeKey();
-  const days = Number($("duration").value);
+  const durationMs = Number($("duration").value);
+  const isLifetime = durationMs === -1;
 
   $("generateBtn").disabled = true;
 
@@ -197,8 +241,10 @@ $("generateBtn").onclick = async()=>{
 
     await ref.set({
       status:"active",
-      durationDays:days,
-      durationMs:days*86400000,
+      durationMs:durationMs,
+      durationDays:isLifetime ? 0 :
+        durationMs / 86400000,
+      lifetime:isLifetime,
       createdAt:firebase.database.ServerValue.TIMESTAMP,
       activatedBy:null,
       activatedAt:null,
@@ -208,7 +254,8 @@ $("generateBtn").onclick = async()=>{
     latestKey = key;
     $("newKey").classList.remove("hidden");
     $("copyBtn").classList.remove("hidden");
-    $("newKey").textContent = key+" | "+days+" दिन";
+    $("newKey").textContent =
+      key+" | "+durationName(durationMs);
 
     $("customKey").value = "";
     msg("नई Key बन गई।");
@@ -246,8 +293,11 @@ async function deleteExpiredKeys(){
     snapshot.forEach(child=>{
       const data = child.val();
 
-      if(data && data.expiresAt &&
+      if(data &&
+         data.lifetime !== true &&
+         data.expiresAt &&
          Number(data.expiresAt) <= now){
+
         updates[child.key] = null;
         deleted++;
       }
@@ -277,28 +327,41 @@ async function loadKeys(){
       const key = child.key;
       const data = child.val() || {};
       const status = data.status || "unknown";
-      const days = data.durationDays || "-";
 
-      const expiry = data.expiresAt
-        ? new Date(Number(data.expiresAt)).toLocaleString()
-        : "अभी Activate नहीं हुई";
+      const duration = data.lifetime === true
+        ? "Lifetime"
+        : durationName(data.durationMs || 0);
+
+      let expiry;
+
+      if(data.lifetime === true){
+        expiry = "कभी Expire नहीं होगी";
+      }else if(data.expiresAt){
+        expiry = new Date(
+          Number(data.expiresAt)
+        ).toLocaleString();
+      }else{
+        expiry = "पहली Activation का इंतजार";
+      }
+
+      const encodedKey = encodeURIComponent(key);
 
       html += `
         <div class="key">
           <b>${escapeHTML(key)}</b><br>
           <span class="small">
-            अवधि: ${escapeHTML(days)} दिन<br>
+            अवधि: ${escapeHTML(duration)}<br>
             Status: ${escapeHTML(status)}<br>
             Expiry: ${escapeHTML(expiry)}
           </span>
 
           <button class="secondary"
-            onclick="toggleKey('${encodeURIComponent(key)}','${escapeHTML(status)}')">
+            onclick="toggleKey('${encodedKey}','${escapeHTML(status)}')">
             ${status === "active" ? "DISABLE" : "ENABLE"}
           </button>
 
           <button class="danger"
-            onclick="deleteKey('${encodeURIComponent(key)}')">
+            onclick="deleteKey('${encodedKey}')">
             DELETE KEY
           </button>
         </div>
