@@ -3,7 +3,7 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FANGAMEX Key Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -12,37 +12,20 @@
 
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;padding:18px;
-  background:#101522;color:white;
-  font-family:Arial,sans-serif
-}
+body{margin:0;padding:18px;background:#101522;color:white;font-family:Arial}
 .container{max-width:550px;margin:auto}
 h1{text-align:center;color:#ff4081}
-.card{
-  background:#1c2638;padding:18px;
-  border-radius:14px;margin:15px 0
-}
-input,select,button{
-  width:100%;padding:13px;margin:8px 0;
-  border:0;border-radius:8px;font-size:15px
-}
-input,select{background:#fff;color:#111}
-button{
-  background:#ff4081;color:white;
-  font-weight:bold;cursor:pointer
-}
+.card{background:#1c2638;padding:18px;border-radius:14px;margin:15px 0}
+input,select,button{width:100%;padding:13px;margin:8px 0;border:0;border-radius:8px;font-size:15px}
+input,select{background:white;color:#111}
+button{background:#ff4081;color:white;font-weight:bold;cursor:pointer}
 button:disabled{opacity:.5}
 .secondary{background:#34445e}
 .danger{background:#c62828}
-.key{
-  background:#101522;padding:12px;
-  border-radius:8px;margin:10px 0;
-  overflow-wrap:anywhere
-}
+.key{background:#101522;padding:12px;border-radius:8px;margin:10px 0;overflow-wrap:anywhere}
 .small{font-size:12px;color:#b8c3d6}
 .hidden{display:none}
-#message{padding:10px;color:#ffd180}
+#message{padding:10px;color:#80ffb0;overflow-wrap:anywhere}
 </style>
 </head>
 
@@ -64,14 +47,10 @@ button:disabled{opacity:.5}
 <div class="card">
 <h3>नई Key बनाएँ</h3>
 
-<input id="customKey" type="text"
-placeholder="अपनी Key लिखें जैसे FANGAMEX123"
-maxlength="32">
+<input id="customKey" type="text" maxlength="32"
+placeholder="अपनी Key लिखें जैसे FANGAMEX123">
 
-<p class="small">
-खाली छोड़ने पर Automatic Key बनेगी।
-केवल A-Z, 0-9 और - इस्तेमाल करें।
-</p>
+<p class="small">खाली छोड़ने पर Automatic Key बनेगी। केवल A-Z, 0-9 और - लिखें।</p>
 
 <select id="duration">
 <option value="1">1 दिन</option>
@@ -119,19 +98,31 @@ const auth = firebase.auth();
 const db = firebase.database();
 
 const $ = id => document.getElementById(id);
-
 let latestKey = "";
 
-function msg(message, error=false){
+function msg(message,error=false){
   $("message").textContent = message;
   $("message").style.color = error ? "#ff7777" : "#80ffb0";
+}
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,c=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[c]);
 }
 
 function makeKey(){
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result = "FANGAMEX-";
-  for(let i=0;i<12;i++){
-    result += chars[Math.floor(Math.random()*chars.length)];
+  const random = new Uint32Array(12);
+  crypto.getRandomValues(random);
+
+  for(let i=0;i<random.length;i++){
+    result += chars[random[i] % chars.length];
   }
   return result;
 }
@@ -141,6 +132,7 @@ function adminCheck(){
          auth.currentUser.uid === ADMIN_UID;
 }
 
+// LOGIN
 $("loginBtn").onclick = async()=>{
   const email = $("email").value.trim();
   const password = $("password").value;
@@ -175,6 +167,7 @@ auth.onAuthStateChanged(async user=>{
   }
 });
 
+// CREATE KEY
 $("generateBtn").onclick = async()=>{
   if(!adminCheck()){
     msg("Admin Login जरूरी है।",true);
@@ -198,7 +191,7 @@ $("generateBtn").onclick = async()=>{
     const existing = await ref.once("value");
 
     if(existing.exists()){
-      msg("यह Key पहले से मौजूद है।",true);
+      msg("यह Key पहले से मौजूद है। दूसरी Key लिखें।",true);
       return;
     }
 
@@ -213,7 +206,6 @@ $("generateBtn").onclick = async()=>{
     });
 
     latestKey = key;
-
     $("newKey").classList.remove("hidden");
     $("copyBtn").classList.remove("hidden");
     $("newKey").textContent = key+" | "+days+" दिन";
@@ -229,8 +221,10 @@ $("generateBtn").onclick = async()=>{
   }
 };
 
+// COPY KEY
 $("copyBtn").onclick = async()=>{
   if(!latestKey)return;
+
   try{
     await navigator.clipboard.writeText(latestKey);
     msg("Key Copy हो गई।");
@@ -239,7 +233,7 @@ $("copyBtn").onclick = async()=>{
   }
 };
 
-// Expired keys को हटाना
+// DELETE EXPIRED KEYS
 async function deleteExpiredKeys(){
   if(!adminCheck())return;
 
@@ -247,26 +241,28 @@ async function deleteExpiredKeys(){
     const snapshot = await db.ref("Keys").once("value");
     const now = Date.now();
     const updates = {};
+    let deleted = 0;
 
     snapshot.forEach(child=>{
       const data = child.val();
 
-      if(data &&
-         data.expiresAt &&
+      if(data && data.expiresAt &&
          Number(data.expiresAt) <= now){
         updates[child.key] = null;
+        deleted++;
       }
     });
 
-    if(Object.keys(updates).length > 0){
+    if(deleted > 0){
       await db.ref("Keys").update(updates);
-      msg(Object.keys(updates).length+" Expired Keys Delete हुईं।");
+      msg(deleted+" Expired Keys Delete हुईं।");
     }
   }catch(e){
-    msg("Expired Key Delete Error: "+e.message,true);
+    msg("Expired Delete Error: "+e.message,true);
   }
 }
 
+// SHOW ALL KEYS
 async function loadKeys(){
   if(!adminCheck())return;
 
@@ -283,21 +279,27 @@ async function loadKeys(){
       const status = data.status || "unknown";
       const days = data.durationDays || "-";
 
-      const expires = data.expiresAt
-        ? new Date(data.expiresAt).toLocaleString()
+      const expiry = data.expiresAt
+        ? new Date(Number(data.expiresAt)).toLocaleString()
         : "अभी Activate नहीं हुई";
 
       html += `
         <div class="key">
           <b>${escapeHTML(key)}</b><br>
           <span class="small">
-            अवधि: ${days} दिन<br>
+            अवधि: ${escapeHTML(days)} दिन<br>
             Status: ${escapeHTML(status)}<br>
-            Expiry: ${escapeHTML(expires)}
+            Expiry: ${escapeHTML(expiry)}
           </span>
+
           <button class="secondary"
-            onclick="toggleKey('${encodeURIComponent(key)}','${status}')">
+            onclick="toggleKey('${encodeURIComponent(key)}','${escapeHTML(status)}')">
             ${status === "active" ? "DISABLE" : "ENABLE"}
+          </button>
+
+          <button class="danger"
+            onclick="deleteKey('${encodeURIComponent(key)}')">
+            DELETE KEY
           </button>
         </div>
       `;
@@ -311,13 +313,7 @@ async function loadKeys(){
   }
 }
 
-function escapeHTML(value){
-  return String(value).replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",
-    '"':"&quot;","'":"&#39;"
-  })[c]);
-}
-
+// ENABLE / DISABLE
 window.toggleKey = async(encodedKey,status)=>{
   if(!adminCheck())return;
 
@@ -327,6 +323,7 @@ window.toggleKey = async(encodedKey,status)=>{
     await db.ref("Keys/"+key+"/status").set(
       status === "active" ? "disabled" : "active"
     );
+
     msg("Key का Status बदल गया।");
     await loadKeys();
   }catch(e){
@@ -334,11 +331,36 @@ window.toggleKey = async(encodedKey,status)=>{
   }
 };
 
+// MANUAL DELETE
+window.deleteKey = async(encodedKey)=>{
+  if(!adminCheck()){
+    msg("Admin Login जरूरी है।",true);
+    return;
+  }
+
+  const key = decodeURIComponent(encodedKey);
+
+  if(!confirm("क्या आप "+key+" को हमेशा के लिए Delete करना चाहते हैं?")){
+    return;
+  }
+
+  try{
+    await db.ref("Keys/"+key).remove();
+
+    msg("Key Delete हो गई।");
+    await loadKeys();
+  }catch(e){
+    msg("Delete Error: "+e.message,true);
+  }
+};
+
+// REFRESH
 $("refreshBtn").onclick = async()=>{
   await deleteExpiredKeys();
   await loadKeys();
 };
 
+// LOGOUT
 $("logoutBtn").onclick = async()=>{
   await auth.signOut();
   msg("Logout हो गया।");
