@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FANGAMEX Key Panel</title>
+<title>FANGAMEX Key Admin Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -12,17 +11,33 @@
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:18px;background:#101522;color:white;font-family:Arial}
+body{
+ margin:0;padding:18px;background:#101522;
+ color:white;font-family:Arial,sans-serif
+}
 .container{max-width:550px;margin:auto}
 h1{text-align:center;color:#ff4081}
-.card{background:#1c2638;padding:18px;border-radius:14px;margin:15px 0}
-input,select,button{width:100%;padding:13px;margin:8px 0;border:0;border-radius:8px;font-size:15px}
+.card{
+ background:#1c2638;padding:18px;
+ border-radius:14px;margin:15px 0
+}
+input,select,button{
+ width:100%;padding:13px;margin:8px 0;
+ border:0;border-radius:8px;font-size:15px
+}
 input,select{background:white;color:#111}
-button{background:#ff4081;color:white;font-weight:bold;cursor:pointer}
+button{
+ background:#ff4081;color:white;
+ font-weight:bold;cursor:pointer
+}
 button:disabled{opacity:.5}
 .secondary{background:#34445e}
 .danger{background:#c62828}
-.key{background:#101522;padding:12px;border-radius:8px;margin:10px 0;overflow-wrap:anywhere}
+.key{
+ background:#101522;padding:12px;
+ border-radius:8px;margin:10px 0;
+ overflow-wrap:anywhere
+}
 .small{font-size:12px;color:#b8c3d6;line-height:1.8}
 .hidden{display:none}
 #message{padding:10px;color:#80ffb0;overflow-wrap:anywhere}
@@ -48,14 +63,14 @@ button:disabled{opacity:.5}
 <h3>नई Key बनाएँ</h3>
 
 <input id="customKey" type="text" maxlength="32"
-placeholder="अपनी Key लिखें जैसे FANGAMEX123">
+placeholder="अपनी Key लिखें या खाली छोड़ें">
 
 <p class="small">
-खाली छोड़ने पर Automatic Key बनेगी। केवल A-Z, 0-9 और - लिखें।
+खाली छोड़ने पर Automatic Random Key बनेगी।
+केवल A-Z, 0-9 और - इस्तेमाल करें।
 </p>
 
-<label for="duration">Key Duration चुनें</label>
-
+<label>Key Duration चुनें</label>
 <select id="duration">
 <optgroup label="घंटे">
 <option value="3600000">1 घंटा</option>
@@ -80,7 +95,7 @@ placeholder="अपनी Key लिखें जैसे FANGAMEX123">
 </optgroup>
 
 <optgroup label="विशेष">
-<option value="-1">Lifetime (हमेशा के लिए)</option>
+<option value="-1">Lifetime</option>
 </optgroup>
 </select>
 
@@ -105,14 +120,13 @@ placeholder="अपनी Key लिखें जैसे FANGAMEX123">
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyC9c7lx17F3vTKuTLV9VokoeAmbMT6vaMc",
-  authDomain: "aim-ai-angel.firebaseapp.com",
-  databaseURL: "https://aim-ai-angel-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "aim-ai-angel",
-  storageBucket: "aim-ai-angel.firebasestorage.app",
-  messagingSenderId: "200877621483",
-  appId: "1:200877621483:web:42d357d1810aef46e67eae",
-  measurementId: "G-P9DFJ0WZ8Y"
+ apiKey: "AIzaSyC9c7lx17F3vTKuTLV9VokoeAmbMT6vaMc",
+ authDomain: "aim-ai-angel.firebaseapp.com",
+ databaseURL: "https://aim-ai-angel-default-rtdb.asia-southeast1.firebasedatabase.app",
+ projectId: "aim-ai-angel",
+ storageBucket: "aim-ai-angel.firebasestorage.app",
+ messagingSenderId: "200877621483",
+ appId: "1:200877621483:web:42d357d1810aef46e67eae"
 };
 
 const ADMIN_UID = "brnGMEwd4VZrp7HHwLyD3gq3QNA2";
@@ -126,307 +140,278 @@ const $ = id => document.getElementById(id);
 let latestKey = "";
 
 function msg(message,error=false){
-  $("message").textContent = message;
-  $("message").style.color = error ? "#ff7777" : "#80ffb0";
+ $("message").textContent=message;
+ $("message").style.color=error?"#ff7777":"#80ffb0";
 }
 
 function escapeHTML(value){
-  return String(value).replace(/[&<>"']/g,c=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  })[c]);
+ return String(value).replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",
+ '"':"&quot;","'":"&#39;"
+ })[c]);
 }
 
 function makeKey(){
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let result = "FANGAMEX-";
-  const random = new Uint32Array(12);
-  crypto.getRandomValues(random);
+ const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+ const random=new Uint32Array(16);
+ crypto.getRandomValues(random);
 
-  for(let i=0;i<random.length;i++){
-    result += chars[random[i] % chars.length];
-  }
-  return result;
+ let result="FANGAMEX-";
+ for(let i=0;i<random.length;i++){
+  result+=chars[random[i]%chars.length];
+ }
+ return result;
 }
 
 function adminCheck(){
-  return auth.currentUser &&
-         auth.currentUser.uid === ADMIN_UID;
+ return auth.currentUser &&
+ auth.currentUser.uid===ADMIN_UID;
 }
 
 function durationName(ms){
-  if(Number(ms) === -1) return "Lifetime";
+ ms=Number(ms);
+ if(ms===-1)return "Lifetime";
 
-  const hours = Number(ms) / 3600000;
+ const hours=ms/3600000;
+ if(Number.isInteger(hours)&&hours<24){
+  return hours+(hours===1?" घंटा":" घंटे");
+ }
 
-  if(Number.isInteger(hours) && hours < 24){
-    return hours + (hours === 1 ? " घंटा" : " घंटे");
-  }
+ const days=ms/86400000;
+ if(Number.isInteger(days))return days+" दिन";
 
-  const days = Number(ms) / 86400000;
+ return "Custom अवधि";
+}
 
-  if(Number.isInteger(days)){
-    return days + " दिन";
-  }
+function keyState(data){
+ if(data.status==="disabled")return "Disabled";
+ if(data.lifetime===true)return "Lifetime";
 
-  return "Custom अवधि";
+ if(data.expiresAt && Number(data.expiresAt)<=Date.now()){
+  return "Expired";
+ }
+
+ if(!data.activatedAt)return "Not Activated";
+
+ return "Active";
 }
 
 // LOGIN
-$("loginBtn").onclick = async()=>{
-  const email = $("email").value.trim();
-  const password = $("password").value;
+$("loginBtn").onclick=async()=>{
+ const email=$("email").value.trim();
+ const password=$("password").value;
 
-  if(!email || !password){
-    msg("Email और Password भरें।",true);
-    return;
-  }
+ if(!email||!password){
+  msg("Email और Password भरें।",true);
+  return;
+ }
 
-  try{
-    await auth.signInWithEmailAndPassword(email,password);
-  }catch(e){
-    msg("Login Error: "+e.message,true);
-  }
+ $("loginBtn").disabled=true;
+
+ try{
+  await auth.signInWithEmailAndPassword(email,password);
+ }catch(e){
+  msg("Login Error: "+e.message,true);
+ }finally{
+  $("loginBtn").disabled=false;
+ }
 };
 
 auth.onAuthStateChanged(async user=>{
-  if(user && user.uid === ADMIN_UID){
-    $("loginBox").classList.add("hidden");
-    $("panel").classList.remove("hidden");
-    msg("Admin Login सफल।");
-    await deleteExpiredKeys();
-    await loadKeys();
-  }else{
-    $("loginBox").classList.remove("hidden");
-    $("panel").classList.add("hidden");
+ if(user&&user.uid===ADMIN_UID){
+  $("loginBox").classList.add("hidden");
+  $("panel").classList.remove("hidden");
+  msg("Admin Login सफल।");
+  await loadKeys();
+ }else{
+  $("loginBox").classList.remove("hidden");
+  $("panel").classList.add("hidden");
 
-    if(user){
-      await auth.signOut();
-      msg("यह Admin Account नहीं है।",true);
-    }
+  if(user){
+   await auth.signOut();
+   msg("यह Admin Account नहीं है।",true);
   }
+ }
 });
 
-// CREATE KEY
-$("generateBtn").onclick = async()=>{
-  if(!adminCheck()){
-    msg("Admin Login जरूरी है।",true);
-    return;
+// GENERATE KEY
+$("generateBtn").onclick=async()=>{
+ if(!adminCheck()){
+  msg("Admin Login जरूरी है।",true);
+  return;
+ }
+
+ const typed=$("customKey").value.trim().toUpperCase();
+
+ if(typed&&!/^[A-Z0-9-]{4,32}$/.test(typed)){
+  msg("Key 4 से 32 अक्षरों की होनी चाहिए।",true);
+  return;
+ }
+
+ const key=typed||makeKey();
+ const durationMs=Number($("duration").value);
+ const lifetime=durationMs===-1;
+
+ $("generateBtn").disabled=true;
+
+ try{
+  const ref=db.ref("Keys/"+key);
+
+  // Duplicate key से बचाव
+  const result=await ref.transaction(current=>{
+   if(current!==null)return;
+   return {
+    status:"active",
+    durationMs:durationMs,
+    durationDays:lifetime?0:durationMs/86400000,
+    lifetime:lifetime,
+    createdAt:firebase.database.ServerValue.TIMESTAMP,
+    activatedBy:null,
+    activatedAt:null,
+    expiresAt:null
+   };
+  });
+
+  if(!result.committed){
+   msg("यह Key पहले से मौजूद है। दूसरी Key लिखें।",true);
+   return;
   }
 
-  const typed = $("customKey").value.trim().toUpperCase();
+  latestKey=key;
+  $("newKey").textContent=key+" | "+durationName(durationMs);
+  $("newKey").classList.remove("hidden");
+  $("copyBtn").classList.remove("hidden");
+  $("customKey").value="";
 
-  if(typed && !/^[A-Z0-9-]{4,32}$/.test(typed)){
-    msg("Key 4 से 32 अक्षरों की होनी चाहिए।",true);
-    return;
-  }
+  msg("नई Key सफलतापूर्वक बन गई।");
+  await loadKeys();
 
-  const key = typed || makeKey();
-  const durationMs = Number($("duration").value);
-  const isLifetime = durationMs === -1;
-
-  $("generateBtn").disabled = true;
-
-  try{
-    const ref = db.ref("Keys/"+key);
-    const existing = await ref.once("value");
-
-    if(existing.exists()){
-      msg("यह Key पहले से मौजूद है। दूसरी Key लिखें।",true);
-      return;
-    }
-
-    await ref.set({
-      status:"active",
-      durationMs:durationMs,
-      durationDays:isLifetime ? 0 :
-        durationMs / 86400000,
-      lifetime:isLifetime,
-      createdAt:firebase.database.ServerValue.TIMESTAMP,
-      activatedBy:null,
-      activatedAt:null,
-      expiresAt:null
-    });
-
-    latestKey = key;
-    $("newKey").classList.remove("hidden");
-    $("copyBtn").classList.remove("hidden");
-    $("newKey").textContent =
-      key+" | "+durationName(durationMs);
-
-    $("customKey").value = "";
-    msg("नई Key बन गई।");
-    await loadKeys();
-
-  }catch(e){
-    msg("Error: "+e.message,true);
-  }finally{
-    $("generateBtn").disabled = false;
-  }
+ }catch(e){
+  msg("Generate Error: "+e.message,true);
+ }finally{
+  $("generateBtn").disabled=false;
+ }
 };
 
-// COPY KEY
-$("copyBtn").onclick = async()=>{
-  if(!latestKey)return;
+// COPY
+$("copyBtn").onclick=async()=>{
+ if(!latestKey)return;
 
-  try{
-    await navigator.clipboard.writeText(latestKey);
-    msg("Key Copy हो गई।");
-  }catch(e){
-    msg("Copy नहीं हुआ। Key को दबाकर Copy करें।",true);
-  }
+ try{
+  await navigator.clipboard.writeText(latestKey);
+  msg("Key Copy हो गई।");
+ }catch(e){
+  msg("Key को दबाकर Copy करें।",true);
+ }
 };
 
-// DELETE EXPIRED KEYS
-async function deleteExpiredKeys(){
-  if(!adminCheck())return;
-
-  try{
-    const snapshot = await db.ref("Keys").once("value");
-    const now = Date.now();
-    const updates = {};
-    let deleted = 0;
-
-    snapshot.forEach(child=>{
-      const data = child.val();
-
-      if(data &&
-         data.lifetime !== true &&
-         data.expiresAt &&
-         Number(data.expiresAt) <= now){
-
-        updates[child.key] = null;
-        deleted++;
-      }
-    });
-
-    if(deleted > 0){
-      await db.ref("Keys").update(updates);
-      msg(deleted+" Expired Keys Delete हुईं।");
-    }
-  }catch(e){
-    msg("Expired Delete Error: "+e.message,true);
-  }
-}
-
-// SHOW ALL KEYS
+// LOAD KEYS
 async function loadKeys(){
-  if(!adminCheck())return;
+ if(!adminCheck())return;
 
-  try{
-    const snapshot = await db.ref("Keys").once("value");
-    let html = "";
-    let count = 0;
+ try{
+  const snapshot=await db.ref("Keys").once("value");
+  let html="";
+  let count=0;
 
-    snapshot.forEach(child=>{
-      count++;
+  snapshot.forEach(child=>{
+   count++;
 
-      const key = child.key;
-      const data = child.val() || {};
-      const status = data.status || "unknown";
+   const key=child.key;
+   const data=child.val()||{};
+   const status=keyState(data);
 
-      const duration = data.lifetime === true
-        ? "Lifetime"
-        : durationName(data.durationMs || 0);
+   const duration=data.lifetime===true
+    ?"Lifetime":durationName(data.durationMs||0);
 
-      let expiry;
+   let expiry="पहली Activation का इंतजार";
 
-      if(data.lifetime === true){
-        expiry = "कभी Expire नहीं होगी";
-      }else if(data.expiresAt){
-        expiry = new Date(
-          Number(data.expiresAt)
-        ).toLocaleString();
-      }else{
-        expiry = "पहली Activation का इंतजार";
-      }
+   if(data.lifetime===true){
+    expiry="कभी Expire नहीं होगी";
+   }else if(data.expiresAt){
+    expiry=new Date(Number(data.expiresAt)).toLocaleString();
+   }
 
-      const encodedKey = encodeURIComponent(key);
+   const created=data.createdAt
+    ?new Date(Number(data.createdAt)).toLocaleString()
+    :"Unknown";
 
-      html += `
-        <div class="key">
-          <b>${escapeHTML(key)}</b><br>
-          <span class="small">
-            अवधि: ${escapeHTML(duration)}<br>
-            Status: ${escapeHTML(status)}<br>
-            Expiry: ${escapeHTML(expiry)}
-          </span>
+   const encoded=encodeURIComponent(key);
 
-          <button class="secondary"
-            onclick="toggleKey('${encodedKey}','${escapeHTML(status)}')">
-            ${status === "active" ? "DISABLE" : "ENABLE"}
-          </button>
+   html+=`
+   <div class="key">
+    <b>${escapeHTML(key)}</b><br>
+    <span class="small">
+     अवधि: ${escapeHTML(duration)}<br>
+     Status: ${escapeHTML(status)}<br>
+     Created: ${escapeHTML(created)}<br>
+     Expiry: ${escapeHTML(expiry)}
+    </span>
 
-          <button class="danger"
-            onclick="deleteKey('${encodedKey}')">
-            DELETE KEY
-          </button>
-        </div>
-      `;
-    });
+    <button class="secondary"
+     onclick="toggleKey('${encoded}')">
+     ${data.status==="active"?"DISABLE":"ENABLE"}
+    </button>
 
-    $("keyCount").textContent = "कुल Keys: "+count;
-    $("keyList").innerHTML = html || "अभी कोई Key नहीं है।";
+    <button class="danger"
+     onclick="deleteKey('${encoded}')">
+     DELETE KEY
+    </button>
+   </div>`;
+  });
 
-  }catch(e){
-    msg("Load Error: "+e.message,true);
-  }
+  $("keyCount").textContent="कुल Keys: "+count;
+  $("keyList").innerHTML=html||"अभी कोई Key नहीं है।";
+
+ }catch(e){
+  msg("Load Error: "+e.message,true);
+ }
 }
 
 // ENABLE / DISABLE
-window.toggleKey = async(encodedKey,status)=>{
-  if(!adminCheck())return;
+window.toggleKey=async encoded=>{
+ if(!adminCheck())return;
 
-  const key = decodeURIComponent(encodedKey);
+ const key=decodeURIComponent(encoded);
 
-  try{
-    await db.ref("Keys/"+key+"/status").set(
-      status === "active" ? "disabled" : "active"
-    );
+ try{
+  const ref=db.ref("Keys/"+key+"/status");
+  const snapshot=await ref.once("value");
+  const current=snapshot.val();
 
-    msg("Key का Status बदल गया।");
-    await loadKeys();
-  }catch(e){
-    msg("Error: "+e.message,true);
-  }
+  await ref.set(current==="active"?"disabled":"active");
+
+  msg("Key Status बदल गया।");
+  await loadKeys();
+ }catch(e){
+  msg("Status Error: "+e.message,true);
+ }
 };
 
-// MANUAL DELETE
-window.deleteKey = async(encodedKey)=>{
-  if(!adminCheck()){
-    msg("Admin Login जरूरी है।",true);
-    return;
-  }
+// DELETE
+window.deleteKey=async encoded=>{
+ if(!adminCheck())return;
 
-  const key = decodeURIComponent(encodedKey);
+ const key=decodeURIComponent(encoded);
 
-  if(!confirm("क्या आप "+key+" को हमेशा के लिए Delete करना चाहते हैं?")){
-    return;
-  }
+ if(!confirm("क्या आप इस Key को Delete करना चाहते हैं?"))return;
 
-  try{
-    await db.ref("Keys/"+key).remove();
-
-    msg("Key Delete हो गई।");
-    await loadKeys();
-  }catch(e){
-    msg("Delete Error: "+e.message,true);
-  }
+ try{
+  await db.ref("Keys/"+key).remove();
+  msg("Key Delete हो गई।");
+  await loadKeys();
+ }catch(e){
+  msg("Delete Error: "+e.message,true);
+ }
 };
 
 // REFRESH
-$("refreshBtn").onclick = async()=>{
-  await deleteExpiredKeys();
-  await loadKeys();
-};
+$("refreshBtn").onclick=loadKeys;
 
 // LOGOUT
-$("logoutBtn").onclick = async()=>{
-  await auth.signOut();
-  msg("Logout हो गया।");
+$("logoutBtn").onclick=async()=>{
+ await auth.signOut();
+ msg("Logout हो गया।");
 };
 </script>
 </body>
